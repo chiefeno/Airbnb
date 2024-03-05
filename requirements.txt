@@ -1,0 +1,5 @@
+minio
+requests
+pandas
+psycopg2
+geopy

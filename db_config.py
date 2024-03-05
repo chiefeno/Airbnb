@@ -1,0 +1,3 @@
+DB_HOST='127.0.0.1'
+DB_NAME='jo.'
+DB_PORT=5432
