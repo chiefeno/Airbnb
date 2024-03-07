@@ -17,24 +17,10 @@ with DAG(
     schedule_interval='0 6 * * *',  
 ) as dag:
 
-    get_airbnb = BashOperator(
+    pipeline_execution = BashOperator(
         task_id='airbnb',
-        bash_command='python air_bnb.py',
+        bash_command='python pipeline_execution.py',
     )
 
-    get_customers = BashOperator(
-        task_id='company',
-        bash_command='python get_companies_data.py',
-    )
 
-    map_city_companies = BashOperator(
-        task_id='map_city',
-        bash_command='python map_trick.py',
-    )
-
-    insert_db = BashOperator(
-        task_id='insert_db',
-        bash_command='python insert.py',
-    )
-
-    get_airbnb >> get_customers >> map_city_companies >> insert_db
+    pipeline_execution
