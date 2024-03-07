@@ -2,49 +2,50 @@ import os
 import csv
 from minio import Minio
 
-# Retrieve environment variables
-minio_root_user = os.environ.get('MINIO_ROOT_USER')
-minio_root_password = os.environ.get('MINIO_ROOT_PASSWORD')
-minio_host = 'localhost'
-minio_port = 9000
+def download_most_recent_company_file():
+    # Retrieve environment variables
+    minio_root_user = os.environ.get('MINIO_ROOT_USER')
+    minio_root_password = os.environ.get('MINIO_ROOT_PASSWORD')
+    minio_host = 'localhost'
+    minio_port = 9000
 
-# Create MinIO client
-minio_client = Minio(
-    endpoint=f'{minio_host}:{minio_port}',
-    access_key=minio_root_user,
-    secret_key=minio_root_password,
-    secure=False,
-)
+    # Create MinIO client
+    minio_client = Minio(
+        endpoint=f'{minio_host}:{minio_port}',
+        access_key=minio_root_user,
+        secret_key=minio_root_password,
+        secure=False,
+    )
 
-# Retrieve customer data
-bucket_name = 'companies'
+    # Retrieve customer data
+    bucket_name = 'companies'
 
-# List objects in the bucket
-objects = minio_client.list_objects(bucket_name, recursive=True)
+    # List objects in the bucket
+    objects = minio_client.list_objects(bucket_name, recursive=True)
 
+    # Initialize variables to track the most recent file
+    most_recent_file = None
+    most_recent_date = None
 
+    # Iterate over the objects and find the CSV file with the latest date
+    for obj in objects:
+        if obj.object_name.endswith('.csv'):
+            # Get the filename
+            filename = obj.object_name
 
-# Iterate over the objects and filter CSV files
-csv_lines = []
+            # Extract the date from the filename
+            date_str = filename[:-4]  # Remove the '.csv' extension
 
-header_written = False
+            # Compare with the current most recent date
+            if most_recent_date is None or date_str > most_recent_date:
+                most_recent_file = filename
+                most_recent_date = date_str
 
-for obj in objects:
-    if obj.object_name.endswith('.csv'):
-        response = minio_client.get_object(bucket_name, obj.object_name)
-        content = response.data.decode('utf-8').splitlines()
-        
-        reader = csv.reader(content)
-        rows = list(reader)
-        if not header_written:
-            csv_lines.extend(rows)
-            header_written = True
-        else:
-            csv_lines.extend(rows[1:])
-        
-
-with open('customers_data.csv', 'w') as file:
-    writer = csv.writer(file)
-    writer.writerows(csv_lines)
-
-print('job_done')
+    # Download the most recent CSV file
+    if most_recent_file:
+        current_directory = os.getcwd()
+        file_path = os.path.join(current_directory, most_recent_file)
+        minio_client.fget_object(bucket_name, most_recent_file, file_path)
+        return file_path
+    else:
+        return None
