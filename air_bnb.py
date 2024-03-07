@@ -3,11 +3,10 @@ import os.path
 import json
 import csv
 
-# url variable
-url = 'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/air-bnb-listings/exports'
+# Get the AirBnB listing data for France
 
-# Useing the export method of the API to download the file at once using streaming 
-def get_file(url):
+def get_airbnb():
+    url = 'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/air-bnb-listings/exports?where=column_19%20%3D%20%22France'
     response = requests.get(url)
     link = response.json()['links'][1]['href']
     data = requests.get(link, stream=True)
@@ -16,6 +15,3 @@ def get_file(url):
         for chunk in data.iter_content(chunk_size=512 * 1024):
             file.write(chunk)
     print("Download complete!") 
-
-
-get_file(url)
